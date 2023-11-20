@@ -1,0 +1,157 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+{% load static %}
+<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1"></script>
+<style>
+  body {
+    background-image: url('https://img.freepik.com/vector-premium/marco-hojas-verdes-fondo-blanco-fondo-degradado-ilustracion-vectorial_176503-666.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+  }
+
+  h1,h5 {
+    background-color: #3498db; /* Color de fondo */
+    color: #fff; /* Color del texto */
+    padding: 20px; /* Espaciado interno */
+    border-radius: 10px; /* Bordes redondeados */
+    display: inline-block; /* Para que el fondo se ajuste al contenido */
+  }
+
+  .logo {
+    width: 50px; /* Ajusta el ancho según tus necesidades */
+    height: auto; /* Ajusta la altura automáticamente */
+    margin-right: 10px; /* Espaciado a la derecha del logo */
+    vertical-align: middle; /* Centra verticalmente el logo */
+  }
+
+  /* Animación de desvanecimiento */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  h1,h5 {
+    animation: fadeIn 1s ease-in-out; /* Aplica la animación al título */
+  }
+</style>
+<div class="fixed-top d-flex">
+  {% include 'layouts/sidebar.html' %}
+  <div class="flex-grow-1">
+    {% include 'layouts/header.html' %}
+    <div class="d-flex">
+      <div class="my-3 mx-3">
+        <div class="container">
+          <h1>Mis Empleados</h1>
+          <table id="myTable"></table>
+        </div>
+      </div>
+      <div class="col-3 card mx-2">
+        <div class="card-body">
+          <h5>Servicios x Empleados</h5>
+          <div>
+            <canvas id="chartContainer"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-3 card mx-2">
+        <div class="card-body">
+          <h5>Asignación futura</h5>
+          <div id="serviciosAsignadosContainer"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% block scripts %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      
+      var datos = JSON.parse("{{ data|escapejs }}");
+      console.log(datos);
+
+      
+      const dataTable = new simpleDatatables.DataTable("#myTable", {
+        searchable: true,
+        fixedHeight: true,
+        data: {
+          headings: [
+            "Nombre",
+            "Apellido",
+            "Dirección",
+            "Telefono",
+            "Experiencia",
+            "Sueldo",
+          ],
+          data: datos.empleados,
+        },
+      });
+
+      // Gráfico pastel
+      const barColors = [
+        "rgba(0,0,255,1.0)",
+        "rgba(0,0,255,0.8)",
+        "rgba(0,0,255,0.6)",
+        "rgba(0,0,255,0.4)",
+        "rgba(0,0,255,0.2)",
+      ];
+      const nombresApellidos = datos.empleados.map(
+        (empleado) => empleado[0] + " " + empleado[1]
+      );
+
+      const canvas = document.getElementById("chartContainer");
+      const pastelEmpleServicios = new Chart(canvas, {
+        type: "pie",
+        data: {
+          labels: nombresApellidos,
+          datasets: [
+            {
+              backgroundColor: barColors,
+              data: datos.servicios_realizados,
+            },
+          ],
+        },
+        options: {
+          title: {
+            display: true,
+            text: "Total Servicios x Empleados",
+          },
+        },
+      });
+
+      // Mostrar servicios asignados
+      function mostrarServiciosAsignados() {
+        var container = document.getElementById(
+          "serviciosAsignadosContainer"
+        );
+        container.innerHTML = ""; 
+
+        datos.servicios_asignados.forEach(function (servicio) {
+          var servicioHTML = `
+            <p>
+              <strong>ID del Servicio:</strong> ${servicio.id}<br>
+              <strong>Cliente:</strong> ${servicio.cliente}<br>
+              <strong>Empleado Asignado:</strong> ${servicio.empleado}<br>
+              <strong>Fecha del Servicio:</strong> ${servicio.fecha}<br>
+              <strong>Tipo de Espacio:</strong> ${servicio.tipo_espacio}<br>
+            </p>
+          `;
+
+          container.innerHTML += servicioHTML;
+        });
+      }
+
+      
+      mostrarServiciosAsignados();
+    });
+  </script>
+  </div>
+</div>
+{% endblock scripts %}
+{% endblock content %}

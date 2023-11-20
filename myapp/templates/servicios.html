@@ -1,0 +1,121 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+{% load static %}
+<style>
+  
+  h1,h2 {
+    background-color: #3498db; /* Color de fondo */
+    color: #fff; /* Color del texto */
+    padding: 20px; /* Espaciado interno */
+    border-radius: 10px; /* Bordes redondeados */
+    display: inline-block; /* Para que el fondo se ajuste al contenido */
+  }
+
+  .logo {
+    width: 50px; /* Ajusta el ancho según tus necesidades */
+    height: auto; /* Ajusta la altura automáticamente */
+    margin-right: 10px; /* Espaciado a la derecha del logo */
+    vertical-align: middle; /* Centra verticalmente el logo */
+  }
+
+  /* Animación de desvanecimiento */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  h1,h2 {
+    animation: fadeIn 1s ease-in-out; /* Aplica la animación al título */
+  }
+</style>
+<div class="fixed-top d-flex">
+  {% include 'layouts/sidebar.html' %}
+  <div class="flex-grow-1">
+    {% include 'layouts/header.html' %}
+    <div class="d-flex">
+      <div class="my-3 mx-3">
+        <div class="container">
+          <h1>Mis Servicios</h1>
+          <table id="myTable"></table>
+        </div>
+      </div>
+      <div class="col-3 card mx-2">
+        <div class="card-body">
+          <div class="comparacion-visual">
+            <h2>Comparación entre Servicios Sostenibles y No Sostenibles</h2>
+            <canvas id="graficoComparativo"></canvas>
+          </div>
+      </div>
+      
+    </div>
+  </div>
+  {% block scripts %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Parsear JSON y obtener datos
+      var serviciosData = JSON.parse('{{ data|escapejs|safe }}');
+      console.log(serviciosData);
+  
+      const dataTable = new simpleDatatables.DataTable("#myTable", {
+          searchable: true,
+          fixedHeight: true,
+          data: {
+              headings: [
+                  "Fecha",
+                  "Tipo",
+                  "Costo",
+                  "Nombre Cliente",
+                  "Empleado Asignado",
+                  "Tipo De Espacio",
+              ],
+              data: serviciosData.servicios,
+          },
+      });
+      // Agrega aquí más celdas según tus necesidades
+        // Obtener datos para el gráfico (debes proporcionar datos reales aquí)
+    var datosSostenibles = ['10','0','80'/* datos para servicios sostenibles */];
+    var datosNoSostenibles = ['80','60','50'/* datos para servicios no sostenibles */];
+
+    // Configuración del gráfico
+    var ctx = document.getElementById("graficoComparativo").getContext("2d");
+    var comparativoChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Ahorro Agua', 'Huella De Carbono', 'Eficiencia'], // Personaliza según tus métricas
+        datasets: [
+          {
+            label: 'Servicios Sostenibles',
+            backgroundColor: 'rgba(75, 192, 192, 0.5)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1,
+            data: datosSostenibles,
+          },
+          {
+            label: 'Servicios No Sostenibles',
+            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1,
+            data: datosNoSostenibles,
+          },
+        ],
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+  });
+  
+
+  </script>
+</div>
+</div>
+{% endblock scripts %}
+{% endblock content %}

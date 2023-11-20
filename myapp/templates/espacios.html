@@ -1,0 +1,127 @@
+{% extends "layouts/base.html" %}
+{% block content %}
+  {% load static %}
+  <style>
+    body {
+      background-image: url('{% static "https://img.freepik.com/vector-premium/marco-hojas-verdes-fondo-blanco-fondo-degradado-ilustracion-vectorial_176503-666.jpg" %}');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      background-color: #3498db; /* Color de fondo */
+      color: #fff; /* Color del texto */
+      padding: 20px; /* Espaciado interno */
+      border-radius: 10px; /* Bordes redondeados */
+      display: inline-block; /* Para que el fondo se ajuste al contenido */
+    }
+  
+    .logo {
+      width: 50px; /* Ajusta el ancho según tus necesidades */
+      height: auto; /* Ajusta la altura automáticamente */
+      margin-right: 10px; /* Espaciado a la derecha del logo */
+      vertical-align: middle; /* Centra verticalmente el logo */
+    }
+  
+    /* Animación de desvanecimiento */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+  
+    h1 {
+      animation: fadeIn 1s ease-in-out; /* Aplica la animación al título */
+    }
+  </style>
+  <div class="fixed-top d-flex">
+    {% include 'layouts/sidebar.html' %}
+    <div class="flex-grow-1">
+      {% include 'layouts/header.html' %}
+      <div class="my-3 mx-3">
+        <div class="container">
+          <h1>
+            <img src="https://cdn-icons-png.flaticon.com/128/11314/11314901.png" alt="Logo" class="logo">
+            Limpio Sano Espacios
+          </h1>
+
+          <div class="row">
+            <div class="col-md-6">
+              <h5>Total Espacios</h5>
+              <canvas id="myChart"></canvas>
+            </div>
+            <div class="col-md-6">
+              <h5>Estatus Actual Espacios</h5>
+              <canvas id="statusChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% block scripts %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      var data = JSON.parse("{{ data|escapejs }}");
+
+      // Gráfico de tipos de espacios
+const ctx = document.getElementById("myChart");
+new Chart(ctx, {
+  type: "pie",
+  data: {
+    labels: data.nombres_espacios,
+    datasets: [
+      {
+        label: "Total",
+        data: data.totales,
+        backgroundColor: [
+          "rgba(144, 238, 144, 0.2)", // Light Green
+          "rgba(0, 128, 0, 0.2)",    // Green
+          "rgba(50, 205, 50, 0.2)",  // Lime Green
+          // Puedes agregar más colores según sea necesario
+        ],
+        borderColor: [
+          "rgba(144, 238, 144, 1)",
+          "rgba(0, 128, 0, 1)",
+          "rgba(50, 205, 50, 1)",
+          // Puedes agregar más colores según sea necesario
+        ],
+        borderWidth: 1,
+      },
+    ],
+  },
+  options: {
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+  },
+});
+
+      // Gráfico de estados de espacios
+      const statusCtx = document.getElementById("statusChart");
+      new Chart(statusCtx, {
+        type: "doughnut",
+        data: {
+          labels: data.estados_espacios,
+          datasets: [
+            {
+              data: data.total_por_estado,
+              backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56"],
+            },
+          ],
+        },
+      });
+    });
+  </script>
+  {% endblock scripts %}
+{% endblock content %}
