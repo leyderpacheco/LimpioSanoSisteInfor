@@ -1,0 +1,199 @@
+{% extends "layouts/base.html" %} {% block content %} {% load static %}
+<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1"></script>
+<style>
+  body {
+    background-image: url('{% static "assets/img/2983751.jpg" %}');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+  }
+  h1 {
+    background-color: #3498db; /* Color de fondo */
+    color: #fff; /* Color del texto */
+    padding: 20px; /* Espaciado interno */
+    border-radius: 10px; /* Bordes redondeados */
+    display: inline-block; /* Para que el fondo se ajuste al contenido */
+  }
+
+  .logo {
+    width: 50px; /* Ajusta el ancho según tus necesidades */
+    height: auto; /* Ajusta la altura automáticamente */
+    margin-right: 10px; /* Espaciado a la derecha del logo */
+    vertical-align: middle; /* Centra verticalmente el logo */
+  }
+
+  /* Animación de desvanecimiento */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  h1 {
+    animation: fadeIn 1s ease-in-out; /* Aplica la animación al título */
+  }
+</style>
+<div class="fixed-top d-flex">
+  {% include 'layouts/sidebar.html' %}
+  <div class="flex-grow-1">
+    {% include 'layouts/header.html' %}
+    <div class="my-3 mx-3">
+      <!-- Contenido de tu dashboard -->
+      <h1>
+        <img src="https://cdn-icons-png.flaticon.com/128/11314/11314901.png" alt="Ícono de cliente" />
+        Limpio Sano Metricas Clave
+      </h1>
+
+
+      <!-- Agrega aquí el contenido específico del dashboard -->
+      <div class="d-flex">
+        <div class="col-3 card mx-3">
+          <div class="card-body text-center">
+            <img src="https://cdn5.dibujos.net/dibujos/pintados/201720/el-planeta-tierra-espacio-pintado-por-googlelogo-11010663.jpg" alt="Ícono de cliente"
+              class="img-fluid mb-3" />
+      
+            <h5 class="card-title text-primary">Total Clientes</h5>
+            <h6 class="card-subtitle mb-2 text-muted">Historico</h6>
+      
+            <div >
+              <canvas id="total-clientes-chart"></canvas>
+            </div>
+            <h1 class="">
+              Total: <span id="total-clientes"></span> clientes
+            </h1>
+          </div>
+        </div>
+        <div class="col-3 card mx-3">
+          <div class="card-body">
+            <h5 class="card-title text-primary">Total Servicios Realizados</h5>
+            <h6 class="card-subtitle mb-2 text-muted">Historico</h6>
+
+            <div>
+              <canvas id="servicios-chart"></canvas>
+            </div>
+            <h1 class="card-text text-end">
+              Total: {{ total_servicios }} Servicios
+            </h1>
+          </div>
+        </div>
+        <div class="col-3 card mx-3">
+          <div class="card-body">
+            <h5 class="card-title text-primary">Ingresos</h5>
+            <table class="container">
+              <thead>
+                <tr>
+                  <th>Mes</th>
+                  <th>Ingresos</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for ingreso in ingresos_por_mes %}
+                <tr>
+                  <td>{{ ingreso.month|date:"F " }}</td>
+                  <td>{{ ingreso.ingresos }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+
+            <div>
+              <canvas id="growth-rate-chart"></canvas>
+            </div>
+            <h1 class="card-text text-success">
+              Tasa:{{ promedio_crecimiento }}%
+            </h1>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% block scripts %}
+
+<script>
+  const totalServiciosChart = document.getElementById("servicios-chart");
+  // Obtiene la cadena JSON del contexto de Django
+  var serviciosPorMesJSON = "{{ servicios_por_mes_json|escapejs }}";
+
+  // Comprueba los datos en la consola para asegurarte de que la cadena sea válida JSON
+  console.log(serviciosPorMesJSON);
+
+  try {
+    // Analiza la cadena JSON
+    var data = JSON.parse(serviciosPorMesJSON);
+
+    // Verifica si la propiedad servicios_por_mes existe y es un array
+    if (data && Array.isArray(data)) {
+      // Extrae las etiquetas (meses) y los datos totales
+      var meses = data.map((servicio) => {
+        // Convierte la cadena de fecha en un objeto Date
+        var fecha = new Date(servicio.mes);
+
+        // Obtiene el número de mes (indexado desde 0)
+        var numeroMes = fecha.getMonth() + 1; // Sumamos 1 porque los meses están indexados desde 0
+
+        // Retorna el número de mes como etiqueta
+        return numeroMes;
+      });
+
+      var totales = data.map((servicio) => servicio.total);
+
+      // Configura el gráfico
+      new Chart(totalServiciosChart, {
+        type: "line",
+        data: {
+          labels: meses,
+          datasets: [
+            {
+              label: "# de Servicios x Mes",
+              data: totales,
+              backgroundColor: "rgba(75, 192, 192, 0.2)",
+              borderColor: "rgba(75, 192, 192, 1)",
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true,
+            },
+          },
+        },
+      });
+    } else {
+      console.error(
+        "La propiedad servicios_por_mes no está definida o no es un array."
+      );
+    }
+  } catch (error) {
+    console.error("Error al analizar JSON:", error);
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    // Parsear JSON y obtener datos
+    var totalClientes = "{{ total_clientes }}";
+    console.log(totalClientes);
+
+    // Obtener el elemento HTML donde mostrar el total de clientes
+    var totalClientesElement = document.querySelector("#total-clientes");
+
+    // Iniciar la animación del contador
+    anime({
+      targets: totalClientesElement,
+      innerHTML: [0, totalClientes],
+      round: 1, // Redondear a números enteros
+      easing: "linear", // Utilizar una animación lineal
+      duration: 20000, // Duración de la animación en milisegundos
+    });
+
+  });
+</script>
+{% endblock scripts %} {% endblock content %}
